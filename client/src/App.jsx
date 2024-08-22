@@ -11,13 +11,13 @@ function App() {
   };
 
   const ANIMATION = {
-    instant: { transition: "top 0s, left 0s, right 0s" },
+    instant: { transition: "top 0s, left 0s, right 0s, transform 0s, opacity 0.5s" },
     ease: {
-      transition: "top 0.5s, left 0.5s, right 0.5s",
+      transition: "top 0.3s, left 0.3s, right 0.3s, transform 0.3s",
       transitionTimingFunction: "ease-in-out",
     },
     ease_fast: {
-      transition: "top 0.3s, left 0.3s, right 0.3s",
+      transition: "top 0.3s, left 0.3s, right 0.3s, transform 0.3s, opacity 0.3s",
       transitionTimingFunction: "ease-out",
     },
   };
@@ -45,16 +45,27 @@ function App() {
   const ATTRIBUTE = {
     hidden: {},
     selectable: gameState == STATE.ongoing ? { cursor: "pointer" } : {},
-    selected: gameState == STATE.reset ? {} : { backgroundColor: "red" },
+    selected:
+      gameState == STATE.reset
+        ? {}
+        : {
+            backgroundImage: "url(/images/card-halo-red.png)",
+            backgroundSize: "100% 100%",
+          },
     reveal: { transition: "transform 0.8s", transform: "rotateY(-180deg)" },
   };
 
   const POSITION = {
-    left: { left: WIDTH / 2.1 - CARD_WIDTH * 3, top: 250 },
+    left: { left: WIDTH / 2.1 - CARD_WIDTH * 2.5, top: 250 },
     center: { left: WIDTH / 2.1 - CARD_WIDTH / 2, top: 250 },
-    right: { left: WIDTH / 2.1 + CARD_WIDTH * 2, top: 250 },
-    offscreen_Top: { top: -250, left: WIDTH / 2.1 - CARD_WIDTH / 2 },
-    offscreen_Left: { top: 250, left: -500 },
+    right: { left: WIDTH / 2.1 + CARD_WIDTH * 1.5, top: 250 },
+    offscreen_Top: {
+      top: -300,
+      left: WIDTH / 2.1 - CARD_WIDTH / 2,
+      transform:
+        gameState == STATE.start ? "rotateZ(-180deg)" : "rotateZ(0deg)",
+    },
+    offscreen_Left: { top: 250, left: -500, opacity: 0},
   };
 
   const [cardAnimations, setCardAnimations] = useState([
@@ -141,25 +152,12 @@ function App() {
 
   return (
     <div className="main-container">
-      <div className="info-container"></div>
-      <div className="auth-container"></div>
-
-      <div
-        className="game-board"
-        style={{
-          backgroundColor: "green",
-          position: "absolute",
-          top: 20,
-          left: 20,
-          bottom: 20,
-          right: 20,
-          justifyContent: "center",
-          display: "flex",
-        }}
-      >
+      <div className="game-board">
         <div className="title"></div>
 
-        <div className="dealer"></div>
+        <div className="dealer">
+          <img src="/images/dealer.png" />
+        </div>
 
         <div
           className="game-state-controller"
@@ -209,7 +207,7 @@ function App() {
             setChoice(0);
           }}
         >
-          <div className="card" style={isRevealed ? rotateAnimations[0] : {}}>
+          <div className={"card"} style={isRevealed ? rotateAnimations[0] : {}}>
             <div className="card-front"></div>
             <div className="card-back"></div>
           </div>
@@ -278,6 +276,11 @@ function App() {
           </div>
         </div>
       </div>
+
+      <div className="info-container">
+        <img src="/images/title.png" height='30%' width='30%' />
+      </div>
+      <div className="auth-container"></div>
     </div>
   );
 }
