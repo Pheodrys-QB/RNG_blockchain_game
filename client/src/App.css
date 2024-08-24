@@ -1,11 +1,14 @@
 body {
   background-color: red;
-
 }
 
 .card-front {
-  background-color: yellow;
+  background-image: url("/images/card-front.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   transform: rotateY(180deg);
+  flex-direction: column;
+  display: flex;
 }
 
 .card-back {
@@ -32,7 +35,6 @@ body {
   z-index: 4;
 }
 
-
 .card {
   position: relative;
   width: 100%;
@@ -49,21 +51,20 @@ body {
   background-color: red;
 } */
 
-
-.game-board{
+.game-board {
   position: absolute;
   top: 0px;
   left: 0px;
   bottom: 0px;
   right: 0px;
-  justify-content:center;
+  justify-content: center;
   display: flex;
   background-image: url("/images/bg-dense.png");
   background-repeat: no-repeat;
   background-size: 100% 150%;
 }
 
-.game-board::after{
+.game-board::after {
   content: "";
   pointer-events: none;
   position: absolute;
@@ -75,7 +76,7 @@ body {
   background-size: 100% 100%;
 }
 
-.dealer{
+.dealer {
   position: absolute;
   display: flex;
   justify-content: center;
@@ -83,13 +84,71 @@ body {
   padding-right: 250px;
 }
 
-.info-container{
+.info-container {
   position: absolute;
   display: flex;
   justify-content: center;
   top: 10px;
   left: -250px;
-  z-index: 7;
-  opacity: 0.5;
+  z-index: 8;
+}
 
+.animation-instant {
+  transition: top 0s, left 0s, transform 0s, opacity 0s;
+}
+
+.animation-ease {
+  transition: top 0.3s, left 0.3s, transform 0.3s;
+  transition-timing-function: ease-in-out;
+}
+
+.animation-ease-fast {
+  transition: top 0.3s, left 0.3s, transform 0.3s, opacity 0.3s;
+  transition-timing-function: ease-out;
+}
+
+.selectable {
+  cursor: pointer;
+}
+
+.selected {
+  background-image: url(/images/card-halo-red.png);
+  background-size: 100% 100%;
+}
+
+.reveal .card {
+  transition: transform 0.8s;
+  transform: rotateY(-180deg);
+}
+
+.delay-02 {
+  transition-delay: 0.2s;
+}
+
+.delay-04 {
+  transition-delay: 0.4s;
+}
+
+.delay-05 .card {
+  transition-delay: 0.5s;
+}
+
+.card-front-image {
+  flex: 7;
+}
+
+.card-front-content {
+  flex: 3;
+  text-align: center;
+}
+
+.title {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  padding-top: 100px;
 }
