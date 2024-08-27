@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ethers } from "ethers";
 import "./App.css";
 
 function App() {
@@ -148,6 +149,49 @@ function App() {
     setIsRevealed(false);
     setIsSubmitted(false);
     setRotateAnimations(["", "", ""]);
+  };
+
+  useEffect(() => {
+    if (address && provider) {
+      getBal();
+    }
+  }, [address, provider]);
+
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const prov = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await prov.send("eth_requestAccounts", []);
+
+        // const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+        const sign = await prov.getSigner();
+
+        setSigner(sign);
+        setProvider(prov);
+        setAddress(accounts[0]);
+        
+      } catch (e) {
+        setError({code: 2, message:"Connection to wallet fail"});
+      }
+    } else {
+      // provider = ethers.getDefaultProvider()
+
+      setError({code: 1, message:"Etherium provider not detected"});
+    }
+  };
+
+  const getBal = async () => {
+    try {
+      // const balance = await provider.send("eth_getBalance", [
+      //   activeAccount,
+      //   "latest",
+      // ]);
+
+      const bal = await provider.getBalance(address);
+      setBalance(ethers.formatEther(bal));
+    } catch (e) {
+      setError({code: 3, message: "Fail to get address balance"})
+    }
   };
 
   return (
