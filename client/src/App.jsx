@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import "./App.css";
 
 function App() {
+  const CONTRACT_ADDRESS = null;
   const CARD_WIDTH = 168.75;
   const STATE = {
     start: "start",
@@ -18,7 +19,7 @@ function App() {
   };
 
   const [WIDTH, setWidth] = useState(window.innerWidth);
-  const [isTitleShown, setIsTitleShown] = useState(false);
+  const [isTitleShown, setIsTitleShown] = useState(true);
   const [fadeTitle, setFadeTitle] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
 
@@ -29,6 +30,8 @@ function App() {
 
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [isHistoryShown, setIsHistoryShown] = useState(false);
 
   const [gameState, setGameState] = useState(STATE.start);
   const [isSelectable, setIsSelectable] = useState(false);
@@ -72,18 +75,12 @@ function App() {
     // Check if MetaMask is installed
     //setError({ code: 1, message: "MetaMask is not installed" });
 
-    connect();
+    connectWallet();
 
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const connect = async () => {
-    // Try to connect using ethers.js
-    //setError({ code: 2, message: "MetaMask connection failure" });
-  };
-  const getBalance = async () => {};
 
   const handleStart = () => {
     setAllowClick(false);
@@ -118,7 +115,7 @@ function App() {
       return a.animation;
     });
     setRotateAnimations(t_anim);
-
+    getBalance();
     setGameState(STATE.end);
   };
 
@@ -153,11 +150,12 @@ function App() {
 
   useEffect(() => {
     if (address && provider) {
-      getBal();
+      getBalance();
     }
   }, [address, provider]);
 
   const connectWallet = async () => {
+    setIsConnecting(true);
     if (window.ethereum) {
       try {
         const prov = new ethers.BrowserProvider(window.ethereum);
@@ -169,18 +167,19 @@ function App() {
         setSigner(sign);
         setProvider(prov);
         setAddress(accounts[0]);
-        
+        setIsConnecting(false);
+        setFadeTitle(true);
       } catch (e) {
-        setError({code: 2, message:"Connection to wallet fail"});
+        setError({ code: 2, message: "Connection to wallet fail" });
       }
     } else {
       // provider = ethers.getDefaultProvider()
 
-      setError({code: 1, message:"Etherium provider not detected"});
+      setError({ code: 1, message: "Etherium provider not detected" });
     }
   };
 
-  const getBal = async () => {
+  const getBalance = async () => {
     try {
       // const balance = await provider.send("eth_getBalance", [
       //   activeAccount,
@@ -190,7 +189,33 @@ function App() {
       const bal = await provider.getBalance(address);
       setBalance(ethers.formatEther(bal));
     } catch (e) {
-      setError({code: 3, message: "Fail to get address balance"})
+      setError({ code: 3, message: "Fail to get address balance" });
+    }
+  };
+
+  const getHistory = async ({
+    address,
+    start = 0,
+    end = 99999999,
+    page = 1,
+    offset = 10,
+    sort = "desc",
+    apikey,
+    contractAddress,
+  }) => {
+    try {
+      const res = await fetch(
+        `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=${start}&endblock=${end}&page=${page}&offset=${offset}&sort=${sort}&apikey=${apikey}`
+      );
+      const data = await res.json();
+      const data_filter = data.result.filter((txt) => {
+        if (!contractAddress) return txt.from == address;
+        return txt.to == contractAddress && txt.from == address;
+      });
+      setHistory(data_filter);
+      console.log(data);
+    } catch (e) {
+      setError({ code: 4, message: "Fail to get history from Etherscan" });
     }
   };
 
@@ -198,176 +223,116 @@ function App() {
     <div className="main-container">
       <div className="game-board">
         {isTitleShown && (
-          <div className="title" style={fadeTitle ? { opacity: 0 } : {}}>
-            <div>
+          <div
+            className="title"
+            style={fadeTitle ? { opacity: 0 } : {}}
+            onTransitionEnd={() => {
+              setIsTitleShown(false);
+            }}
+          >
+            <div style={{ marginTop: -150 }}>
               <img src="/images/title.png" />
             </div>
+            <button
+              onClick={() => {
+                connectWallet();
+              }}
+              style={{ marginTop: 100 }}
+            >
+              connect
+            </button>
           </div>
         )}
 
         <div className="dealer">
           <img src="/images/dealer.png" />
         </div>
-        {!isTitleShown && !error && (
-          <>
-            <div
-              className="game-state-controller"
-              style={{ position: "absolute", bottom: 20 }}
-            >
-              <div className="game-message"></div>
-              <button
-                disabled={gameState == STATE.ongoing? choice < 0 : !allowClick}
-                onClick={() => {
-                  if (gameState == STATE.start) {
-                    handleStart();
-                    return;
-                  }
-                  if (gameState == STATE.ongoing) {
-                    handleSubmit();
-                    return;
-                  }
-                  if (gameState == STATE.end) {
-                    handleDiscard();
-                    return;
-                  }
-                }}
-              >
-                {gameState}
-              </button>
-            </div>
-
-            <div
-              className={
-                "card-container" +
-                (" " + cardAnimations[0]) +
-                (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
-                (gameState != STATE.reset && choice == 0
-                  ? " " + ATTRIBUTE.selected
-                  : "") +
-                (isRevealed ? " " + rotateAnimations[0] : "")
+        <div
+          className="game-state-controller"
+          style={{ position: "absolute", bottom: 20 }}
+        >
+          <div className="game-message"></div>
+          <button
+            disabled={gameState == STATE.ongoing ? choice < 0 : !allowClick}
+            onClick={() => {
+              if (isTitleShown) return;
+              if (gameState == STATE.start) {
+                handleStart();
+                return;
               }
-              style={{ ...POSITION.offscreen_Top, ...cardPositions[0] }}
-              onTransitionEnd={() => {
-                setAllowClick(true);
-
-                if (gameState == STATE.reset) {
-                  handleReset();
-                }
-              }}
-              onClick={() => {
-                if (gameState != STATE.ongoing) return;
-                setChoice(0);
-              }}
-            >
-              <div className="card">
-                <div className="card-front">
-                  <div className="card-front-image"></div>
-                  <div className="card-front-content">
-                    <h1>+{rewards[0]}</h1>
-                  </div>
-                </div>
-                <div className="card-back"></div>
-              </div>
-            </div>
-
-            <div
-              className={
-                "card-container" +
-                (" " + cardAnimations[1]) +
-                (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
-                (gameState != STATE.reset && choice == 1
-                  ? " " + ATTRIBUTE.selected
-                  : "") +
-                (isRevealed ? " " + rotateAnimations[1] : "")
+              if (gameState == STATE.ongoing) {
+                handleSubmit();
+                return;
               }
-              style={{ ...POSITION.offscreen_Top, ...cardPositions[1] }}
-              onTransitionEnd={() => {
-                if (gameState == STATE.reset) {
-                  handleReset();
-                }
-              }}
-              onClick={() => {
-                if (gameState != STATE.ongoing) return;
-                setChoice(1);
-              }}
-            >
-              <div className="card">
-                <div className="card-front">
-                  <div className="card-front-image"></div>
-                  <div className="card-front-content">
-                    <h1>+{rewards[1]}</h1>
-                  </div>
-                </div>
-                <div className="card-back"></div>
-              </div>
-            </div>
-
-            <div
-              className={
-                "card-container" +
-                (" " + cardAnimations[2]) +
-                (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
-                (gameState != STATE.reset && choice == 2
-                  ? " " + ATTRIBUTE.selected
-                  : "") +
-                (isRevealed ? " " + rotateAnimations[2] : "")
+              if (gameState == STATE.end) {
+                handleDiscard();
+                return;
               }
-              style={{ ...POSITION.offscreen_Top, ...cardPositions[2] }}
-              onTransitionEnd={() => {
-                if (gameState == STATE.reset) {
-                  handleReset();
-                }
-              }}
-              onClick={() => {
-                if (gameState != STATE.ongoing) return;
-                setChoice(2);
-              }}
-            >
-              <div className="card">
-                <div className="card-front">
-                  <div className="card-front-image"></div>
-                  <div className="card-front-content">
-                    <h1>+{rewards[2]}</h1>
-                  </div>
-                </div>
-                <div className="card-back"></div>
-              </div>
-            </div>
-          </>
-        )}
+            }}
+          >
+            {gameState}
+          </button>
+        </div>
 
-        {/* <div
-          className="card-container"
-          style={
-            choice == 1 && gameState
-              ? {
-                  ...POSITION.offscreen_Top,
-                  ...cardAnimations[1],
-                  ...cardPositions[1],
-                  ...ATTRIBUTE.selectable,
-                  ...ATTRIBUTE.selected,
-                }
-              : {
-                  ...POSITION.offscreen_Top,
-                  ...cardAnimations[1],
-                  ...cardPositions[1],
-                  ...ATTRIBUTE.selectable,
-                }
+        <div
+          className={
+            "card-container" +
+            (" " + cardAnimations[0]) +
+            (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
+            (gameState != STATE.reset && choice == 0
+              ? " " + ATTRIBUTE.selected
+              : "") +
+            (isRevealed ? " " + rotateAnimations[0] : "")
           }
+          style={{ ...POSITION.offscreen_Top, ...cardPositions[0] }}
+          onTransitionEnd={() => {
+            setAllowClick(true);
+
+            if (gameState == STATE.reset) {
+              handleReset();
+            }
+          }}
+          onClick={() => {
+            if (gameState != STATE.ongoing) return;
+            setChoice(0);
+          }}
+        >
+          <div className="card">
+            <div className="card-front">
+              <div className="card-front-image"></div>
+              <div className="card-front-content">
+                <h1>+{rewards[0]}</h1>
+              </div>
+            </div>
+            <div className="card-back"></div>
+          </div>
+        </div>
+
+        <div
+          className={
+            "card-container" +
+            (" " + cardAnimations[1]) +
+            (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
+            (gameState != STATE.reset && choice == 1
+              ? " " + ATTRIBUTE.selected
+              : "") +
+            (isRevealed ? " " + rotateAnimations[1] : "")
+          }
+          style={{ ...POSITION.offscreen_Top, ...cardPositions[1] }}
+          onTransitionEnd={() => {
+            if (gameState == STATE.reset) {
+              handleReset();
+            }
+          }}
           onClick={() => {
             if (gameState != STATE.ongoing) return;
             setChoice(1);
           }}
         >
-          <div className="card" style={isRevealed ? rotateAnimations[1] : {}}>
+          <div className="card">
             <div className="card-front">
-              <div style={{ flex: 7 }}></div>
-              <div
-                style={{
-                  flex: 3,
-                  textAlign: "center",
-                }}
-              >
+              <div className="card-front-image"></div>
+              <div className="card-front-content">
                 <h1>+{rewards[1]}</h1>
               </div>
             </div>
@@ -376,48 +341,89 @@ function App() {
         </div>
 
         <div
-          className="card-container"
-          style={
-            choice == 2
-              ? {
-                  ...POSITION.offscreen_Top,
-                  ...cardAnimations[2],
-                  ...cardPositions[2],
-                  ...ATTRIBUTE.selectable,
-                  ...ATTRIBUTE.selected,
-                }
-              : {
-                  ...POSITION.offscreen_Top,
-                  ...cardAnimations[2],
-                  ...cardPositions[2],
-                  ...ATTRIBUTE.selectable,
-                }
+          className={
+            "card-container" +
+            (" " + cardAnimations[2]) +
+            (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
+            (gameState != STATE.reset && choice == 2
+              ? " " + ATTRIBUTE.selected
+              : "") +
+            (isRevealed ? " " + rotateAnimations[2] : "")
           }
-          
+          style={{ ...POSITION.offscreen_Top, ...cardPositions[2] }}
+          onTransitionEnd={() => {
+            if (gameState == STATE.reset) {
+              handleReset();
+            }
+          }}
           onClick={() => {
             if (gameState != STATE.ongoing) return;
             setChoice(2);
           }}
         >
-          <div className="card" style={isRevealed ? rotateAnimations[2] : {}}>
+          <div className="card">
             <div className="card-front">
-              <div style={{ flex: 7 }}></div>
-              <div
-                style={{
-                  flex: 3,
-                  textAlign: "center",
-                }}
-              >
+              <div className="card-front-image"></div>
+              <div className="card-front-content">
                 <h1>+{rewards[2]}</h1>
               </div>
             </div>
             <div className="card-back"></div>
           </div>
-        </div> */}
+        </div>
       </div>
-
-      <div className="info-container"></div>
-      <div className="auth-container"></div>
+      <div
+        className="info-container"
+        onClick={() => {
+          setIsHistoryShown(true);
+          getHistory({
+            address: address,
+            contractAddress: CONTRACT_ADDRESS,
+            apikey: "UC5BR5S9MUGFZGRK2IPTK9C58UU1DMAIGY",
+          });
+        }}
+      >
+        <img src="/images/history.png" height={50} width={50} />
+      </div>
+      <div className="auth-container">
+        <div style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
+          {balance} Eth
+        </div>
+        <img
+          src="/images/coin-pouch.png"
+          height={50}
+          width={50}
+          style={{ marginBottom: -10 }}
+        />
+      </div>
+      {isHistoryShown && (
+        <div style={{ top: 0, left: 0, bottom: 0, right: 0 }}>
+          <div
+            className="history-background"
+            onClick={() => {
+              setIsHistoryShown(false);
+            }}
+          ></div>
+          <div className="history-container">
+            <div className="history-title">Transaction History</div>
+            <div className="history-list">
+              {history.map((tx, index) => {
+                return (
+                  <div style={{ width: "80%" }}>
+                    <a
+                      href="https://www.w3schools.com/HOWTO/howto_css_custom_scrollbar.asp"
+                      target="_blank"
+                      className="history-item"
+                    >
+                      {tx.hash}
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

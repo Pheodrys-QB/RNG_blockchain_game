@@ -150,5 +150,108 @@ body {
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  padding-top: 100px;
+  align-items: center;
+  padding-bottom: 200px;
+  transition: opacity 1s;
+  flex-direction: column;
+}
+
+.history-container {
+  position: absolute;
+  display: flex;
+  top: 25px;
+  left: 25px;
+  bottom: 25px;
+  width: 400px;
+  border-radius: 40px;
+  border: solid #8a3207;
+  border-width: 5px;
+  background-color: #1f1c26;
+  z-index: 9;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.history-background {
+  position: absolute;
+  z-index: 9;
+  left: 0px;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.auth-container {
+  position: absolute;
+  z-index: 8;
+  right: 20px;
+  top: 0px;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+}
+
+.info-container {
+  position: absolute;
+  z-index: 8;
+  left: 20px;
+  top: 2px;
+  cursor: pointer;
+  border-radius: 90px;
+}
+
+.info-container:hover {
+  background-color: rgba(244, 230, 113, 0.2);
+}
+
+.history-title {
+  font-size: 30px;
+  color: wheat;
+  padding: 10px;
+  background-color: #7f340f;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.history-list {
+  display: flex;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.history-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px black;
+  border-radius: 10px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: black;
+  border-radius: 10px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #550000;
+}
+
+.history-item {
+  color: wheat;
+  font-size: 16px;
+  display: block;
+  white-space: nowrap;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding: 10px;
 }
