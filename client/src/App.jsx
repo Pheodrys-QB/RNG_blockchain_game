@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import "./App.css";
-
+import contract_json from "../artifacts/contracts/RNG_game.sol/RNG_game.json";
 function App() {
-  const CONTRACT_ADDRESS = null;
+  const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const CONTRACT_ABI = contract_json.abi;
+  const ETHERSCAN_API_KEY = "UC5BR5S9MUGFZGRK2IPTK9C58UU1DMAIGY";
+
   const CARD_WIDTH = 168.75;
   const STATE = {
     start: "start",
@@ -27,6 +30,7 @@ function App() {
 
   const [signer, setSigner] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [contract, setContract] = useState(null);
 
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState(0);
@@ -77,7 +81,16 @@ function App() {
 
     connectWallet();
 
-    const handleResize = () => setWidth(window.innerWidth);
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+      if (gameState == STATE.ongoing) {
+        const fixPos = [POSITION.left, POSITION.center, POSITION.right];
+        setCardPositions((prev) => fixPos);
+      }
+      if (gameState == STATE.start) {
+        //setCardPositions([POSITION.left, POSITION.center, POSITION.right]);
+      }
+    };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -94,29 +107,44 @@ function App() {
   };
 
   const handleSubmit = async () => {
-    setAllowClick(false);
-    setIsSubmitted(true);
+    try {
+      if (!contract) return;
 
-    // call contract
+      setAllowClick(false);
+      setIsSubmitted(true);
 
-    // await result
+      // call contract
+      const tx = await contract
+        .connect(signer)
+        .drawCards(choice, { value: ethers.parseEther("0.001") });
+      const receipt = await tx.wait(1);
+      console.log(receipt.logs[0].eventName);
+      console.log(receipt.logs[0].args.getValue("choice"));
+      const reward = receipt.logs[0].args.getValue("reward").toArray();
+      console.log(reward);
+      // await result
 
-    setRewards([0, 0.5, 0.2]);
+      setRewards([
+        ethers.formatEther(reward[0]),
+        ethers.formatEther(reward[1]),
+        ethers.formatEther(reward[2]),
+      ]);
 
-    const anim = [
-      { animation: ATTRIBUTE.reveal, transitionDelay: true },
-      { animation: ATTRIBUTE.reveal, transitionDelay: true },
-      { animation: ATTRIBUTE.reveal, transitionDelay: true },
-    ];
-    anim[choice].transitionDelay = false;
-    setIsRevealed(true);
-    const t_anim = anim.map((a) => {
-      if (a.transitionDelay) return a.animation + " delay-05";
-      return a.animation;
-    });
-    setRotateAnimations(t_anim);
-    getBalance();
-    setGameState(STATE.end);
+      const anim = [
+        { animation: ATTRIBUTE.reveal, transitionDelay: true },
+        { animation: ATTRIBUTE.reveal, transitionDelay: true },
+        { animation: ATTRIBUTE.reveal, transitionDelay: true },
+      ];
+      anim[choice].transitionDelay = false;
+      setIsRevealed(true);
+      const t_anim = anim.map((a) => {
+        if (a.transitionDelay) return a.animation + " delay-05";
+        return a.animation;
+      });
+      setRotateAnimations(t_anim);
+      getBalance();
+      setGameState(STATE.end);
+    } catch (e) {}
   };
 
   const handleDiscard = () => {
@@ -159,11 +187,22 @@ function App() {
     if (window.ethereum) {
       try {
         const prov = new ethers.BrowserProvider(window.ethereum);
+        const name = (await prov.getNetwork()).name;
+        // if (name != "sepolia") {
+        //   setError({ code: 5, message: "Please use Sepolia Network" });
+        //   return;
+        // }
         const accounts = await prov.send("eth_requestAccounts", []);
 
         // const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
         const sign = await prov.getSigner();
 
+        const gameContract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          CONTRACT_ABI,
+          prov
+        );
+        setContract(gameContract);
         setSigner(sign);
         setProvider(prov);
         setAddress(accounts[0]);
@@ -175,7 +214,7 @@ function App() {
     } else {
       // provider = ethers.getDefaultProvider()
 
-      setError({ code: 1, message: "Etherium provider not detected" });
+      setError({ code: 1, message: "MetaMask not detected" });
     }
   };
 
@@ -205,7 +244,7 @@ function App() {
   }) => {
     try {
       const res = await fetch(
-        `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=${start}&endblock=${end}&page=${page}&offset=${offset}&sort=${sort}&apikey=${apikey}`
+        `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=${start}&endblock=${end}&page=${page}&offset=${offset}&sort=${sort}&apikey=${apikey}`
       );
       const data = await res.json();
       const data_filter = data.result.filter((txt) => {
@@ -233,11 +272,22 @@ function App() {
             <div style={{ marginTop: -150 }}>
               <img src="/images/title.png" />
             </div>
+            <div
+              style={{
+                height: 20,
+                color: "wheat",
+                marginTop: 100,
+                paddingBottom: 20,
+                fontSize: 20,
+                fontWeight: "bold",
+              }}
+            >
+              {error?.message}
+            </div>
             <button
               onClick={() => {
                 connectWallet();
               }}
-              style={{ marginTop: 100 }}
             >
               connect
             </button>
@@ -379,7 +429,7 @@ function App() {
           getHistory({
             address: address,
             contractAddress: CONTRACT_ADDRESS,
-            apikey: "UC5BR5S9MUGFZGRK2IPTK9C58UU1DMAIGY",
+            apikey: ETHERSCAN_API_KEY,
           });
         }}
       >
