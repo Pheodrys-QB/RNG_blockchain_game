@@ -43,14 +43,6 @@ body {
   transform-style: preserve-3d;
 }
 
-/* .card-container:hover .card {
-  transform: rotateY(-180deg);
-}
-
-.card-container:hover {
-  background-color: red;
-} */
-
 .game-board {
   position: absolute;
   top: 0px;
@@ -254,4 +246,28 @@ body {
   text-overflow: ellipsis;
   width: 100%;
   padding: 10px;
+}
+
+button {
+  background-color: #8a3207;
+  border: none;
+  color: rgb(255, 241, 160);
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 1px 1px 1px 1px black;
+}
+
+button:hover {
+  background-color: #7f340f;
+}
+
+button:disabled {
+  background-color: lightgray;
+  cursor: default;
 }

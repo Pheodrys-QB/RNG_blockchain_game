@@ -11,7 +11,7 @@ contract RNG_game {
     address payable public owner;
     address[] public playersHistory;
     uint256 private nonce = 0;
-    uint256 public playerStake = 0.001 ether;
+    uint256 public playerStake = 0.01 ether;
     uint256 public maxWinningPercent = 50;
 
     struct Reward {
@@ -38,7 +38,7 @@ contract RNG_game {
 
     modifier enoughEth() {
         require(
-            address(this).balance >= 0.002 ether,
+            address(this).balance >= (playerStake * 2),
             "Not enough ETH in contract"
         );
         _;
@@ -93,7 +93,7 @@ contract RNG_game {
         return reward;
     }
 
-    receive() external payable { }
+    receive() external payable {}
 
     // READ FUNCTIONS
 

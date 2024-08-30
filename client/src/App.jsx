@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import "./App.css";
-import contract_json from "../artifacts/contracts/RNG_game.sol/RNG_game.json";
+import contract_json from "../RNG_game.json";
 function App() {
-  const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const CONTRACT_ADDRESS = "0x27D5E0fB70e2e80d382f6369926A77d1D3E27423";
   const CONTRACT_ABI = contract_json.abi;
   const ETHERSCAN_API_KEY = "UC5BR5S9MUGFZGRK2IPTK9C58UU1DMAIGY";
 
@@ -188,10 +188,10 @@ function App() {
       try {
         const prov = new ethers.BrowserProvider(window.ethereum);
         const name = (await prov.getNetwork()).name;
-        // if (name != "sepolia") {
-        //   setError({ code: 5, message: "Please use Sepolia Network" });
-        //   return;
-        // }
+        if (name != "sepolia") {
+          setError({ code: 5, message: "Please use Sepolia Network" });
+          return;
+        }
         const accounts = await prov.send("eth_requestAccounts", []);
 
         // const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
@@ -209,7 +209,7 @@ function App() {
         setIsConnecting(false);
         setFadeTitle(true);
       } catch (e) {
-        setError({ code: 2, message: "Connection to wallet fail" });
+        setError({ code: 2, message: "Trying to connect..." });
       }
     } else {
       // provider = ethers.getDefaultProvider()
@@ -247,14 +247,35 @@ function App() {
         `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=${start}&endblock=${end}&page=${page}&offset=${offset}&sort=${sort}&apikey=${apikey}`
       );
       const data = await res.json();
+
+      address = address.toLowerCase();
+      if (contractAddress) contractAddress = contractAddress.toLowerCase();
       const data_filter = data.result.filter((txt) => {
-        if (!contractAddress) return txt.from == address;
-        return txt.to == contractAddress && txt.from == address;
+        if (!contractAddress) return txt.from.toLowerCase() == address;
+        return (
+          txt.to.toLowerCase() == contractAddress &&
+          txt.from.toLowerCase() == address
+        );
       });
       setHistory(data_filter);
-      console.log(data);
+      console.log(data_filter);
     } catch (e) {
       setError({ code: 4, message: "Fail to get history from Etherscan" });
+    }
+  };
+
+  const gameStateToLabel = () => {
+    switch (gameState) {
+      case STATE.start:
+        return "Draw";
+      case STATE.ongoing:
+        return "Choose your destiny";
+      case STATE.end:
+        return "Accept your fate";
+      case STATE.reset:
+        return "Discarding...";
+      default:
+        return "Activate";
     }
   };
 
@@ -289,7 +310,7 @@ function App() {
                 connectWallet();
               }}
             >
-              connect
+              Connect
             </button>
           </div>
         )}
@@ -303,6 +324,13 @@ function App() {
         >
           <div className="game-message"></div>
           <button
+            style={{
+              position: "absolute",
+              zIndex: 6,
+              bottom: 20,
+              marginLeft: -100,
+              width: 200,
+            }}
             disabled={gameState == STATE.ongoing ? choice < 0 : !allowClick}
             onClick={() => {
               if (isTitleShown) return;
@@ -320,7 +348,7 @@ function App() {
               }
             }}
           >
-            {gameState}
+            {gameStateToLabel()}
           </button>
         </div>
 
@@ -436,7 +464,7 @@ function App() {
         <img src="/images/history.png" height={50} width={50} />
       </div>
       <div className="auth-container">
-        <div style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
+        <div style={{ color: "white", fontSize: 20, fontWeight: "bold", color: "rgb(255, 241, 160)"}}>
           {balance} Eth
         </div>
         <img
@@ -459,9 +487,9 @@ function App() {
             <div className="history-list">
               {history.map((tx, index) => {
                 return (
-                  <div style={{ width: "80%" }}>
+                  <div style={{ width: "80%" }} key={index}>
                     <a
-                      href="https://www.w3schools.com/HOWTO/howto_css_custom_scrollbar.asp"
+                      href={"https://sepolia.etherscan.io/tx/" + tx.hash}
                       target="_blank"
                       className="history-item"
                     >
