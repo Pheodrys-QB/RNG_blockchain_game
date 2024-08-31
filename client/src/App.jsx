@@ -3,9 +3,9 @@ import { ethers } from "ethers";
 import "./App.css";
 import contract_json from "../RNG_game.json";
 function App() {
-  const CONTRACT_ADDRESS = "0x27D5E0fB70e2e80d382f6369926A77d1D3E27423";
+  const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
   const CONTRACT_ABI = contract_json.abi;
-  const ETHERSCAN_API_KEY = "UC5BR5S9MUGFZGRK2IPTK9C58UU1DMAIGY";
+  const ETHERSCAN_API_KEY = import.meta.env.VITE_ETHERSCAN_PRIVATE_KEY;
 
   const CARD_WIDTH = 168.75;
   const STATE = {

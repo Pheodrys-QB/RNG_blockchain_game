@@ -6,7 +6,7 @@ module.exports = {
   solidity: "0.8.24",
   etherscan: {
     apiKey: {
-      sepolia: process.env.ETHERSCAN_API_KEY,
+      sepolia: process.env.VITE_ETHERSCAN_API_KEY,
     },
   },
   networks: {
