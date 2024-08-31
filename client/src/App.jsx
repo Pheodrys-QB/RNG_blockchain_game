@@ -36,6 +36,7 @@ function App() {
   const [balance, setBalance] = useState(0);
   const [history, setHistory] = useState([]);
   const [isHistoryShown, setIsHistoryShown] = useState(false);
+  const [isCreditShown, setIsCreditShown] = useState(false);
 
   const [gameState, setGameState] = useState(STATE.start);
   const [isSelectable, setIsSelectable] = useState(false);
@@ -116,7 +117,7 @@ function App() {
       // call contract
       const tx = await contract
         .connect(signer)
-        .drawCards(choice, { value: ethers.parseEther("0.001") });
+        .drawCards(choice, { value: ethers.parseEther("0.01") });
       const receipt = await tx.wait(1);
       console.log(receipt.logs[0].eventName);
       console.log(receipt.logs[0].args.getValue("choice"));
@@ -144,7 +145,10 @@ function App() {
       setRotateAnimations(t_anim);
       getBalance();
       setGameState(STATE.end);
-    } catch (e) {}
+    } catch (e) {
+      setAllowClick(true);
+      setIsSubmitted(false);
+    }
   };
 
   const handleDiscard = () => {
@@ -331,7 +335,11 @@ function App() {
               marginLeft: -100,
               width: 200,
             }}
-            disabled={gameState == STATE.ongoing ? choice < 0 : !allowClick}
+            disabled={
+              gameState == STATE.ongoing
+                ? choice < 0 || !allowClick
+                : !allowClick
+            }
             onClick={() => {
               if (isTitleShown) return;
               if (gameState == STATE.start) {
@@ -356,7 +364,9 @@ function App() {
           className={
             "card-container" +
             (" " + cardAnimations[0]) +
-            (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
+            (gameState == STATE.ongoing && !isSubmitted
+              ? " " + ATTRIBUTE.selectable
+              : "") +
             (gameState != STATE.reset && choice == 0
               ? " " + ATTRIBUTE.selected
               : "") +
@@ -371,7 +381,7 @@ function App() {
             }
           }}
           onClick={() => {
-            if (gameState != STATE.ongoing) return;
+            if (gameState != STATE.ongoing || isSubmitted) return;
             setChoice(0);
           }}
         >
@@ -390,7 +400,9 @@ function App() {
           className={
             "card-container" +
             (" " + cardAnimations[1]) +
-            (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
+            (gameState == STATE.ongoing && !isSubmitted
+              ? " " + ATTRIBUTE.selectable
+              : "") +
             (gameState != STATE.reset && choice == 1
               ? " " + ATTRIBUTE.selected
               : "") +
@@ -403,7 +415,7 @@ function App() {
             }
           }}
           onClick={() => {
-            if (gameState != STATE.ongoing) return;
+            if (gameState != STATE.ongoing || isSubmitted) return;
             setChoice(1);
           }}
         >
@@ -422,7 +434,9 @@ function App() {
           className={
             "card-container" +
             (" " + cardAnimations[2]) +
-            (gameState == STATE.ongoing ? " " + ATTRIBUTE.selectable : "") +
+            (gameState == STATE.ongoing && !isSubmitted
+              ? " " + ATTRIBUTE.selectable
+              : "") +
             (gameState != STATE.reset && choice == 2
               ? " " + ATTRIBUTE.selected
               : "") +
@@ -435,7 +449,7 @@ function App() {
             }
           }}
           onClick={() => {
-            if (gameState != STATE.ongoing) return;
+            if (gameState != STATE.ongoing || isSubmitted) return;
             setChoice(2);
           }}
         >
@@ -451,7 +465,7 @@ function App() {
         </div>
       </div>
       <div
-        className="info-container"
+        className="history-button image-button"
         onClick={() => {
           setIsHistoryShown(true);
           getHistory({
@@ -463,16 +477,26 @@ function App() {
       >
         <img src="/images/history.png" height={50} width={50} />
       </div>
+      <div
+        className="credit-button image-button"
+        onClick={() => {
+          setIsCreditShown(true);
+        }}
+      >
+        <img src="/images/info.png" height={50} width={50} />
+      </div>
       <div className="auth-container">
-        <div style={{ color: "white", fontSize: 20, fontWeight: "bold", color: "rgb(255, 241, 160)"}}>
+        <div
+          style={{
+            fontSize: 20,
+            fontWeight: "bold",
+            color: "rgb(255, 241, 160)",
+            marginBottom: -10,
+          }}
+        >
           {balance} Eth
         </div>
-        <img
-          src="/images/coin-pouch.png"
-          height={50}
-          width={50}
-          style={{ marginBottom: -10 }}
-        />
+        <img src="/images/coin-pouch.png" height={55} width={55} />
       </div>
       {isHistoryShown && (
         <div style={{ top: 0, left: 0, bottom: 0, right: 0 }}>
@@ -498,6 +522,39 @@ function App() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+      {isCreditShown && (
+        <div style={{ top: 0, left: 0, bottom: 0, right: 0 }}>
+          <div
+            className="history-background"
+            onClick={() => {
+              setIsCreditShown(false);
+            }}
+          ></div>
+          <div className="history-container">
+            <div className="history-title">Extra Info</div>
+            <div className="history-list credit-list">
+              <h2>- How to play -</h2>
+              <p>
+                Make sure to have at least 0.015 ETHs in your wallet to cover
+                the stake and transaction gas.
+              </p>
+              <br />
+              <br />
+              <br />
+              <h2>- Credits -</h2>
+              <h3>Made by</h3>
+              <p style={{ textAlign: "center" }}>
+                Huỳnh Quốc Bảo - 20127114 <br />
+                Nguyễn Huỳnh Đức - 20127468
+              </p>
+              <h3>Art by</h3>
+              <a href="https://x.com/Ollie_atNoon" target="_blank">
+                Ollie_atNoon
+              </a>
             </div>
           </div>
         </div>

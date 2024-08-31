@@ -182,10 +182,19 @@ body {
   top: 0px;
   display: flex;
   flex-direction: row;
-  align-items: end;
+  align-items: center;
 }
 
-.info-container {
+.history-button {
+  position: absolute;
+  z-index: 8;
+  left: 80px;
+  top: 2px;
+  cursor: pointer;
+  border-radius: 90px;
+}
+
+.credit-button {
   position: absolute;
   z-index: 8;
   left: 20px;
@@ -194,7 +203,7 @@ body {
   border-radius: 90px;
 }
 
-.info-container:hover {
+.image-button:hover {
   background-color: rgba(244, 230, 113, 0.2);
 }
 
@@ -270,4 +279,17 @@ button:hover {
 button:disabled {
   background-color: lightgray;
   cursor: default;
+}
+
+.credit-list h2,
+.credit-list h3,
+.credit-list p,
+.credit-list a {
+  color: rgb(255, 241, 160);
+  margin: 10px;
+}
+
+.credit-list p {
+  text-align: center;
+  width: 80%;
 }
