@@ -283,6 +283,15 @@ function App() {
     }
   };
 
+  const rewardToImage = (reward) => {
+    reward = parseFloat(reward);
+    if (reward > 0.01) {
+      return "high";
+    } else if (reward > 0.005) {
+      return "mid";
+    } else return "low";
+  };
+
   return (
     <div className="main-container">
       <div className="game-board">
@@ -328,13 +337,7 @@ function App() {
         >
           <div className="game-message"></div>
           <button
-            style={{
-              position: "absolute",
-              zIndex: 6,
-              bottom: 20,
-              marginLeft: -100,
-              width: 200,
-            }}
+            className="play-btn"
             disabled={
               gameState == STATE.ongoing
                 ? choice < 0 || !allowClick
@@ -387,7 +390,14 @@ function App() {
         >
           <div className="card">
             <div className="card-front">
-              <div className="card-front-image"></div>
+              <div className="card-front-image">
+                <img
+                  src={
+                    "/images/card-visual/" + rewardToImage(rewards[0]) + ".png"
+                  }
+                  height="150%"
+                />
+              </div>
               <div className="card-front-content">
                 <h1>+{rewards[0]}</h1>
               </div>
@@ -421,7 +431,14 @@ function App() {
         >
           <div className="card">
             <div className="card-front">
-              <div className="card-front-image"></div>
+              <div className="card-front-image">
+                <img
+                  src={
+                    "/images/card-visual/" + rewardToImage(rewards[1]) + ".png"
+                  }
+                  height="150%"
+                />
+              </div>
               <div className="card-front-content">
                 <h1>+{rewards[1]}</h1>
               </div>
@@ -455,7 +472,14 @@ function App() {
         >
           <div className="card">
             <div className="card-front">
-              <div className="card-front-image"></div>
+              <div className="card-front-image">
+                <img
+                  src={
+                    "/images/card-visual/" + rewardToImage(rewards[2]) + ".png"
+                  }
+                  height="150%"
+                />
+              </div>
               <div className="card-front-content">
                 <h1>+{rewards[2]}</h1>
               </div>

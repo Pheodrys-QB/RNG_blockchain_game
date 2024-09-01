@@ -127,6 +127,7 @@ body {
 
 .card-front-image {
   flex: 7;
+  overflow: hidden;
 }
 
 .card-front-content {
@@ -292,4 +293,12 @@ button:disabled {
 .credit-list p {
   text-align: center;
   width: 80%;
+}
+
+.play-btn{
+    position: absolute;
+    z-index: 6;
+    bottom: 10px;
+    margin-left: -90px;
+    width: 200px;
 }
